@@ -1,46 +1,52 @@
-// utils/sessionStore.js
-import { setUAActive } from "./userStatus.js";
+//utils/sessionStore.js
+import crypto from "crypto";
 
-export const sessions = {};
-export const SESSION_LIMIT_MINUTES = 30; // 30 minutes inactivity
+const sessions = new Map();
+const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+const SECRET = process.env.SESSION_SECRET || "nlrc-secret-key";
 
-// Check if session is still valid
-export const checkSession = (username) => {
-  const session = sessions[username];
-  if (!session) return false;
+// 🔐 create encrypted token
+function encryptToken(raw) {
+  return crypto.createHmac("sha256", SECRET).update(raw).digest("hex");
+}
 
-  const now = new Date();
-  const diffMinutes = (now - session.lastActive) / (1000 * 60);
+// ✅ LOGIN → create session
+export function updateSession(username) {
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const token = encryptToken(rawToken);
 
-  if (diffMinutes > SESSION_LIMIT_MINUTES) {
-    // Session expired → mark user inactive
-    setUAActive(username, 0);
-    delete sessions[username];
-    return false;
+  sessions.set(token, {
+    username,
+    loginTime: new Date(),
+    lastActive: new Date(),
+  });
+
+  console.log(`SESSION CREATED | ${username} | ${token}`);
+  return token;
+}
+
+// 🔍 CHECK SESSION
+export function checkSession(token) {
+  const session = sessions.get(token);
+  if (!session) return null;
+
+  // expire inactive session
+  if (Date.now() - session.lastActive > SESSION_TIMEOUT) {
+    sessions.delete(token);
+    console.log(`SESSION EXPIRED | ${token}`);
+    return null;
   }
 
-  return true;
-};
+  session.lastActive = new Date();
+  return session.username;
+}
 
-// Update session on login or activity
-export const updateSession = (username) => {
-  const now = new Date();
+// 🚪 LOGOUT → flush encrypted token
+export function removeSession(token) {
+  const session = sessions.get(token);
+  if (!session) return null;
 
-  if (sessions[username]) {
-    // Update last active timestamp
-    sessions[username].lastActive = now;
-  } else {
-    // First time login → store loginTime and lastActive
-    sessions[username] = { loginTime: now, lastActive: now };
-  }
-
-  setUAActive(username, 1); // mark user as active
-};
-
-// Remove session and return session info for logging
-export const removeSession = (username) => {
-  const session = sessions[username];
-  delete sessions[username];
-  setUAActive(username, 0); // mark user as inactive
-  return session; // return session info so we can calculate active time
-};
+  sessions.delete(token);
+  console.log(`SESSION REMOVED | ${token}`);
+  return session;
+}
