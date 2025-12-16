@@ -2,7 +2,7 @@
 import crypto from "crypto";
 
 const sessions = new Map();
-const SESSION_TIMEOUT = 1 * 60 * 1000; // 1 minute
+const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes
 const SECRET = process.env.SESSION_SECRET || "nlrc-secret-key";
 
 function encryptToken(raw) {
