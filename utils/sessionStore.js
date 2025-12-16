@@ -2,50 +2,59 @@
 import crypto from "crypto";
 
 const sessions = new Map();
-const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+const SESSION_TIMEOUT = 1 * 60 * 1000; // 1 minute
 const SECRET = process.env.SESSION_SECRET || "nlrc-secret-key";
 
-// 🔐 create encrypted token
 function encryptToken(raw) {
   return crypto.createHmac("sha256", SECRET).update(raw).digest("hex");
 }
 
-// ✅ LOGIN → create session
+// Create session
 export function updateSession(username) {
   const rawToken = crypto.randomBytes(32).toString("hex");
   const token = encryptToken(rawToken);
 
   sessions.set(token, {
     username,
-    loginTime: new Date(),
-    lastActive: new Date(),
+    loginTime: Date.now(),
+    lastActive: Date.now(),
   });
 
   console.log(`SESSION CREATED | ${username} | ${token}`);
   return token;
 }
 
-// 🔍 CHECK SESSION
+// Check session + idle auto-logout
 export function checkSession(token) {
   const session = sessions.get(token);
-  if (!session) return null;
+  if (!session) return { valid: false, reason: "not_found" };
 
-  // expire inactive session
   if (Date.now() - session.lastActive > SESSION_TIMEOUT) {
     sessions.delete(token);
-    console.log(`SESSION EXPIRED | ${token}`);
-    return null;
+    console.log(`SESSION EXPIRED (IDLE) | ${session.username} | ${token}`);
+    return {
+      valid: false,
+      reason: "expired",
+      username: session.username,
+      token,
+    };
   }
 
-  session.lastActive = new Date();
-  return session.username;
+  return { valid: true, username: session.username };
 }
 
-// 🚪 LOGOUT → flush encrypted token
+// Refresh session activity
+export function touchSession(token) {
+  const session = sessions.get(token);
+  if (!session) return false;
+  session.lastActive = Date.now();
+  return true;
+}
+
+// Remove session (logout)
 export function removeSession(token) {
   const session = sessions.get(token);
   if (!session) return null;
-
   sessions.delete(token);
   console.log(`SESSION REMOVED | ${token}`);
   return session;

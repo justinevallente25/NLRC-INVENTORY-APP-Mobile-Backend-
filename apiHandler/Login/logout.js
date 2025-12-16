@@ -1,4 +1,3 @@
-//apiHandler/Login/logout.js
 import express from "express";
 import { removeSession } from "../../utils/sessionStore.js";
 
@@ -6,50 +5,21 @@ const router = express.Router();
 
 router.post("/", (req, res) => {
   const { token } = req.body;
-  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  const ip = req.socket.remoteAddress;
 
-  // Helper to log logout attempts
-  const logAttempt = (status, duration, username) => {
-    console.log(
-      `${ip} | ${username || "UNKNOWN"} (${status})${
-        duration ? ` | Active: ${duration} seconds` : ""
-      }`
-    );
-  };
+  if (!token) return res.status(400).json({ error: "Session token required" });
 
-  // If token is missing, immediately log failure
-  if (!token) {
-    logAttempt("logout-failure", null, "UNKNOWN");
-    return res.status(400).json({ error: "Session token required" });
-  }
+  const session = removeSession(token);
+  if (!session)
+    return res.status(401).json({ error: "Invalid or expired session" });
 
-  try {
-    const session = removeSession(token);
+  const activeSeconds = Math.floor((Date.now() - session.loginTime) / 1000);
 
-    if (!session) {
-      // Token invalid or expired
-      logAttempt("logout-failure", null, "UNKNOWN");
-      return res
-        .status(401)
-        .json({ error: "Invalid or expired session token" });
-    }
+  console.log(
+    `${ip} | ${session.username} (logout-success) | Active: ${activeSeconds}s`
+  );
 
-    const username = session.username;
-    let activeSeconds = null;
-
-    if (session.loginTime) {
-      activeSeconds = Math.floor(
-        (new Date() - new Date(session.loginTime)) / 1000
-      );
-    }
-
-    logAttempt("logout-success", activeSeconds, username);
-    res.json({ message: "Logout successful", activeSeconds });
-  } catch (err) {
-    logAttempt("logout-failure", null, "UNKNOWN");
-    console.error("❌ Logout error:", err);
-    res.status(500).json({ error: "Logout failed" });
-  }
+  res.json({ message: "Logout successful", activeSeconds });
 });
 
 export default router;

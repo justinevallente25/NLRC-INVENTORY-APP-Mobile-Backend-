@@ -3,9 +3,10 @@ import express from "express";
 import os from "os";
 import dotenv from "dotenv";
 import { mainDB, intranetDB } from "./database/index.js"; // DB connections
-import loginRouter from "./apiHandler/Login/login.js"; // Import the login API
-import logoutRouter from "./apiHandler/Login/logout.js"; // Import the logout Api
-import checkSessionRouter from "./apiHandler/Login/checkSession.js"; // import your check-session API
+import login from "./apiHandler/Login/login.js"; // Import the login API
+import logout from "./apiHandler/Login/logout.js"; // Import the logout Api
+import checkSession from "./apiHandler/Login/checkSession.js"; // import your check-session API
+import activity from "./apiHandler/Login/activity.js";
 
 dotenv.config();
 
@@ -82,14 +83,10 @@ app.use(express.json());
 // Routes
 app.get("/", (req, res) => res.send("🚀 NLRC Backend is running!"));
 
-// Mount login API
-app.use("/api/login", loginRouter); // <-- All login endpoints are now under /api/login
-
-// Mount logout API
-app.use("/api/logout", logoutRouter); // <-- All logout endpoints under /api/logout
-
-//check-session API
-app.use("/api/check-session", checkSessionRouter);
+app.use("/api/login", login);
+app.use("/api/check-session", checkSession);
+app.use("/api/activity", activity);
+app.use("/api/logout", logout);
 
 // Start server
 app.listen(PORT, HOST, () => logNetworkInfo(interfaces, HOST));
