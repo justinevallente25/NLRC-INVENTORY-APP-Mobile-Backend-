@@ -38,6 +38,7 @@ router.post("/", (req, res) => {
           UAUsername: user.UAUsername,
           UAModule: user.UAModule,
           EMID: user.EMID,
+          pointer: user.pointer || "-",
         },
       });
     }

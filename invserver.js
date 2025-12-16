@@ -7,6 +7,7 @@ import login from "./apiHandler/Login/login.js"; // Import the login API
 import logout from "./apiHandler/Login/logout.js"; // Import the logout Api
 import checkSession from "./apiHandler/Login/checkSession.js"; // import your check-session API
 import activity from "./apiHandler/Login/activity.js";
+import noSerialListRouter from "./apiHandler/scan/noSerialList.js";
 
 dotenv.config();
 
@@ -87,6 +88,7 @@ app.use("/api/login", login);
 app.use("/api/check-session", checkSession);
 app.use("/api/activity", activity);
 app.use("/api/logout", logout);
+app.use("/api/scan/noSerialList", noSerialListRouter);
 
 // Start server
 app.listen(PORT, HOST, () => logNetworkInfo(interfaces, HOST));
