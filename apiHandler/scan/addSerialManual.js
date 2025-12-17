@@ -6,15 +6,23 @@ const router = express.Router();
 
 /**
  * POST /api/scan/addSerialManual
- * Body: { devicePointer, serial_number }
+ * Body: { devicePointer, serial_number, confirm }
  */
 router.post("/", (req, res) => {
-  const { devicePointer, serial_number } = req.body;
+  const { devicePointer, serial_number, confirm } = req.body;
 
   if (!devicePointer || !serial_number) {
     return res.status(400).json({
       success: false,
       message: "Device pointer and serial number are required",
+    });
+  }
+
+  // Require confirmation
+  if (!confirm) {
+    return res.status(400).json({
+      success: false,
+      message: "Please confirm adding the serial number",
     });
   }
 
