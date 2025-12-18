@@ -51,6 +51,7 @@ router.get("/", (req, res) => {
              b.brand_name AS brand,
              c.category_name AS category
       ${baseQuery}
+       ORDER BY d.pointer DESC
       LIMIT ? OFFSET ?
     `;
 

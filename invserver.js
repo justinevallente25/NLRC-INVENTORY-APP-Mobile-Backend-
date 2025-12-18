@@ -11,6 +11,7 @@ import noSerialListRouter from "./apiHandler/scan/noSerialList.js";
 import deviceDetailsRouter from "./apiHandler/scan/deviceDetails.js";
 import addSerialManualRouter from "./apiHandler/scan/addSerialManual.js";
 import saveSerialNumRouter from "./apiHandler/scan/saveSerialNum.js";
+import deviceListRouter from "./apiHandler/devices/deviceLists.js";
 
 dotenv.config();
 
@@ -95,6 +96,7 @@ app.use("/api/scan/noSerialList", noSerialListRouter);
 app.use("/api/scan/device", deviceDetailsRouter);
 app.use("/api/scan/addSerialManual", addSerialManualRouter);
 app.use("/api/scan/saveSerialNum", saveSerialNumRouter);
+app.use("/api/devices", deviceListRouter);
 
 // Start server
 app.listen(PORT, HOST, () => logNetworkInfo(interfaces, HOST));
